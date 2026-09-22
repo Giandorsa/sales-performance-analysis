@@ -1,85 +1,29 @@
-import os
-import pandas as pd
-import sqlite3
+"""Command line entry point for sales performance analysis."""
+import argparse
+from pathlib import Path
+from src.workflows import load_sql_queries, prepare_data, run_sql_analysis
 
-# Project setup
-
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-RAW_PATH = os.path.join(PROJECT_DIR, "data", "raw", "dataset.csv")
-
-PROCESSED_DIR = os.path.join(PROJECT_DIR, "data", "processed")
-PROCESSED_PATH = os.path.join(PROCESSED_DIR, "sales_processed.csv")
-
-DATABASE_DIR = os.path.join(PROJECT_DIR, "database")
-DATABASE_PATH = os.path.join(DATABASE_DIR, "sales.db")
-
-os.makedirs(PROCESSED_DIR, exist_ok=True)
-os.makedirs(DATABASE_DIR, exist_ok=True)
+PROJECT_ROOT = Path(__file__).resolve().parent
 
 
-# Data loading
-
-df = pd.read_csv(RAW_PATH)
-
-print("Dataset loaded successfully")
-print(f"Shape: {df.shape}")
-
-
-# Data cleaning
-
-df = df.drop_duplicates()
-
-df["order_date"] = pd.to_datetime(df["order_date"])
-
-df = df.dropna()
-
-df = df[
-    (df["price"] > 0) &
-    (df["quantity"] > 0) &
-    (df["total_amount"] > 0) &
-    (df["shipping_cost"] >= 0)
-].copy()
+def main() -> None:
+    """Dispatch the requested preparation or SQL workflow."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("prepare", help="Build validated sales and reporting tables.")
+    commands.add_parser("all", help="Prepare data and execute all SQL analyses.")
+    sql = commands.add_parser("sql", help="Execute a saved SQL analysis.")
+    queries = list(load_sql_queries(PROJECT_ROOT))
+    sql.add_argument("--query", choices=["all", *queries], default="sales_overview")
+    args = parser.parse_args()
+    if args.command in {"prepare", "all"}:
+        prepare_data(PROJECT_ROOT)
+    if args.command == "all" or (args.command == "sql" and args.query == "all"):
+        for query in queries:
+            run_sql_analysis(PROJECT_ROOT, query)
+    elif args.command == "sql":
+        run_sql_analysis(PROJECT_ROOT, args.query)
 
 
-# Data transformation
-
-df["revenue"] = (
-    df["price"] * df["quantity"] * (1 - df["discount"])
-).round(2)
-
-df["month_year"] = (
-    df["order_date"]
-    .dt.to_period("M")
-    .astype(str)
-)
-
-df["is_returned"] = (
-    df["returned"]
-    .str.lower() == "yes"
-).astype(int)
-
-
-# Save processed data
-
-df.to_csv(PROCESSED_PATH, index=False)
-
-print("Processed dataset saved successfully")
-print(f"Shape: {df.shape}")
-
-
-# Create SQLite database
-
-conn = sqlite3.connect(DATABASE_PATH)
-
-df.to_sql(
-    "sales",
-    conn,
-    if_exists="replace",
-    index=False
-)
-
-conn.close()
-
-print("Database created successfully")
-print(f"Database saved at: {DATABASE_PATH}")
+if __name__ == "__main__":
+    main()

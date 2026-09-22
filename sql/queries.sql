@@ -1,69 +1,34 @@
--- Overall sales performance metrics
+-- Sales performance analyses. Run against data/processed/sales.db.
+-- Each -- name: marker identifies a query for the command line interface.
 
-SELECT
-    ROUND(SUM(revenue), 2) AS total_revenue,
-    COUNT(DISTINCT order_id) AS total_orders,
-    COUNT(DISTINCT customer_id) AS total_customers,
-    ROUND(
-        SUM(revenue) / COUNT(DISTINCT order_id),
-        2
-    ) AS average_order_value
+-- name: sales_overview
+-- Full-refund assumption; shipping excluded. Ratios use all recorded orders.
+SELECT COUNT(*) AS orders, COUNT(DISTINCT customer_id) AS customers,
+       ROUND(SUM(gross_revenue), 2) AS gross_revenue,
+       ROUND(SUM(discount_amount), 2) AS discount_amount,
+       ROUND(SUM(revenue), 2) AS revenue_before_returns,
+       ROUND(SUM(returned_revenue), 2) AS returned_revenue,
+       ROUND(SUM(net_revenue), 2) AS net_revenue,
+       ROUND(SUM(net_revenue) / COUNT(*), 2) AS average_order_value,
+       ROUND(1.0 * SUM(is_returned) / COUNT(*), 6) AS return_rate
 FROM sales;
 
+-- name: category_performance
+SELECT * FROM category_performance ORDER BY net_revenue DESC;
 
--- Revenue by category
+-- name: region_performance
+SELECT * FROM region_performance ORDER BY net_revenue DESC;
 
-SELECT
-    category,
-    ROUND(SUM(revenue), 2) AS total_revenue
-FROM sales
-GROUP BY category
-ORDER BY total_revenue DESC;
+-- name: monthly_performance
+-- Growth excludes partial months and missing or zero comparators.
+SELECT * FROM monthly_performance ORDER BY month_year;
 
+-- name: top_products
+SELECT * FROM product_id_performance ORDER BY net_revenue DESC, product_id LIMIT 10;
 
--- Revenue by region
+-- name: top_customers
+SELECT * FROM customer_id_performance ORDER BY net_revenue DESC, customer_id LIMIT 10;
 
-SELECT
-    region,
-    ROUND(SUM(revenue), 2) AS total_revenue
-FROM sales
-GROUP BY region
-ORDER BY total_revenue DESC;
-
-
--- Monthly revenue
-
-SELECT
-    month_year,
-    ROUND(SUM(revenue), 2) AS total_revenue
-FROM sales
-GROUP BY month_year
-ORDER BY month_year;
-
-
--- Top products
-
-SELECT
-    product_id,
-    category,
-    ROUND(SUM(revenue), 2) AS total_revenue
-FROM sales
-GROUP BY product_id, category
-ORDER BY total_revenue DESC
-LIMIT 10;
-
-
--- Top customers
-
-SELECT
-    customer_id,
-    COUNT(DISTINCT order_id) AS total_orders,
-    ROUND(SUM(revenue), 2) AS total_revenue,
-    ROUND(
-        SUM(revenue) / COUNT(DISTINCT order_id),
-        2
-    ) AS average_order_value
-FROM sales
-GROUP BY customer_id
-ORDER BY total_revenue DESC
-LIMIT 10;
+-- name: discount_analysis
+-- Observational comparison; discounts are not randomly assigned.
+SELECT * FROM discount_performance ORDER BY discount;

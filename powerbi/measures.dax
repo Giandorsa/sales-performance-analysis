@@ -1,0 +1,26 @@
+// Create this calculated table first; then create each measure separately on Sales.
+// Format monetary measures as USD for presentation; source currency is unspecified.
+// No currency conversion is applied. Keep measures numeric and set format in Power BI.
+Calendar = CALENDAR(MIN(Sales[order_date]), MAX(Sales[order_date]))
+
+Gross Revenue = SUM(Sales[gross_revenue])
+
+Discount Amount = SUM(Sales[discount_amount])
+
+Revenue Before Returns = SUM(Sales[revenue])
+
+Returned Revenue = SUM(Sales[returned_revenue])
+
+Net Revenue = SUM(Sales[net_revenue])
+
+Orders = DISTINCTCOUNT(Sales[order_id])
+
+Customers = DISTINCTCOUNT(Sales[customer_id])
+
+Returned Orders = CALCULATE([Orders], Sales[is_returned] = 1)
+
+Return Rate = DIVIDE([Returned Orders], [Orders])
+
+Net AOV = DIVIDE([Net Revenue], [Orders])
+
+Weighted Discount Rate = DIVIDE([Discount Amount], [Gross Revenue])
