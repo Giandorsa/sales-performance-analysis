@@ -4,4 +4,5 @@ __pycache__/
 .ruff_cache/
 *.py[cod]
 data/processed/
+private/
 # Raw data is retained until its original download source is documented.

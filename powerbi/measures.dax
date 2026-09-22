@@ -1,6 +1,4 @@
-// Create this calculated table first; then create each measure separately on Sales.
-// Format monetary measures as USD for presentation; source currency is unspecified.
-// No currency conversion is applied. Keep measures numeric and set format in Power BI.
+// Sales performance semantic model. USD is a presentation convention, without conversion.
 Calendar = CALENDAR(MIN(Sales[order_date]), MAX(Sales[order_date]))
 
 Gross Revenue = SUM(Sales[gross_revenue])

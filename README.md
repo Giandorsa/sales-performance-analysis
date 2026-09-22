@@ -4,11 +4,17 @@
 
 This project analyzes order-level sales to explain commercial performance across categories, regions, products and customers. Python prepares validated transactions and reporting tables, SQLite supports business queries, and the Power BI assets define the reporting layer under development.
 
-The goal is to make revenue drivers and the effect of discounts and returns visible through a reproducible analytical workflow.
+The goal is to help a commercial manager prioritize investigation of returns while monitoring sales performance through a reproducible analytical workflow.
 
 ## Business question
 
-Where does sales revenue come from, how much remains after discounts and estimated refunds, and how does performance change over time?
+In this simulated business scenario, a commercial manager needs to distinguish sales booked before returns from the estimated revenue retained after refunds. The decision is where to focus a follow-up investigation: categories with the largest returned amounts, categories with the highest return frequency, or changes in monthly performance.
+
+This is an exploratory review, not a response to a proven decline or a known operational failure. The synthetic dataset contains no business targets, return reasons or actual refund amounts.
+
+**How much revenue remains after discounts and estimated refunds, and which categories should commercial management investigate first based on return value and frequency?**
+
+Supporting questions are how net performance changes across complete months, how concentrated revenue is by category and region, and how observed results differ across discount levels.
 
 ## Dataset
 
@@ -41,12 +47,25 @@ All monetary figures below are presented in USD under the convention described a
 
 - Revenue before returns totals **5,865,293.05**. Assuming full refunds on returned orders reduces it by **388,755.97** to **5,476,537.08** estimated net revenue.
 - **1,903 orders were returned (5.52%)**. Net revenue per recorded order is **158.74**, compared with **170.01** before returns.
+- Returned revenue represents **6.63% of revenue before returns**. This differs from the order return rate because orders have different monetary values.
+- Discounts total **308,518.32**, or **5.00% of gross revenue**. This measures the recorded reduction from list-price sales; it does not show whether discounts generated incremental demand.
 - Electronics contributes **3,074,107.12**, or **56.1% of net revenue**. Its returned revenue is **245,099.38**, making it the largest source of revenue exposed to returns.
 - Fashion has the highest category return rate at **8.28%**, compared with **7.30%** for Electronics. These categories warrant investigation for different reasons: return frequency versus monetary impact.
 - South leads regional net revenue at **1,203,853.24**, closely followed by North at **1,192,986.82**.
 - December 2024 has the highest monthly net revenue at **253,106.85**. A single peak does not establish seasonality.
 
-These findings support monitoring category concentration and investigating return drivers. The data cannot establish why returns occurred or whether discounts caused additional sales.
+Electronics accounts for **63.05% of all returned revenue**, making it the first category to investigate by monetary exposure. Fashion is the first category to investigate by return frequency. This is a prioritization of analytical follow-up, not an estimate of recoverable revenue or evidence of poor product quality.
+
+### Suggested business actions
+
+| Priority | Evidence | Suggested investigation | Additional evidence needed |
+| --- | --- | --- | --- |
+| Electronics: monetary exposure | USD 245,099.38 returned; 63.05% of total returned revenue | Review the orders contributing most returned value and compare patterns within the category | Actual refund amounts, return reasons, stable product master data |
+| Fashion: return frequency | 8.28% of orders returned versus 5.52% overall | Check whether the rate persists across months and product groups | Return reasons, product attributes, delivery and quality records |
+| Discounts: commercial trade-off | USD 308,518.32 in recorded discounts | Compare category mix, net AOV and returns within discount levels before proposing pricing changes | Promotion dates, unit costs and a credible comparison group |
+| Monthly performance: monitoring | December 2024 leads net revenue; boundary months are partial | Compare complete months and separate order volume from net AOV changes | Targets and a longer history before inferring seasonality |
+
+These are proposed actions for the simulated scenario. The analysis does not establish why returns occurred, whether discounts caused sales, or how much a policy change would save. No performance target or expected uplift is invented.
 
 ## Project structure
 
@@ -55,7 +74,7 @@ data/raw/             Included source CSV
 data/processed/       Generated CSV reports, validation audit and sales.db
 src/                  Data cleaning, business metrics and execution workflows
 sql/queries.sql       All business analyses in one SQL worksheet
-powerbi/              Dashboard screenshot, V2 guide, DAX measures and theme
+powerbi/              Dashboard screenshot, DAX measures and theme
 tests/                Business-rule and reconciliation checks
 main.py               Main command line entry point
 ```
@@ -69,7 +88,7 @@ main.py               Main command line entry point
 | Aggregation and monthly comparisons | `src/sales_reporting.py` |
 | CSV exports, SQLite persistence and SQL execution | `src/workflows.py` |
 | Business queries | `sql/queries.sql` |
-| Dashboard model, measures and visual direction | `powerbi/` |
+| Dashboard assets and measures | `powerbi/` |
 | Core business-rule checks | `tests/` |
 
 The Python code uses three functional modules: `data_cleaning.py` validates orders and defines order-level amounts, `sales_reporting.py` aggregates business metrics, and `workflows.py` coordinates file exports, SQLite storage and SQL execution. `src/__init__.py` marks the package and contains no execution logic. Generated `__pycache__/` folders are ignored by Git; they can be deleted and Python recreates them when needed.
@@ -145,9 +164,9 @@ Monthly comparisons use calendar months. Partial boundary months, missing compar
 
 ## Power BI
 
-The V2 implementation guide, DAX measures and theme are in [powerbi/README.md](powerbi/README.md). Use the order-level fact table for interactive measures and the aggregate exports for reconciliation.
+The DAX measures, visual theme and dashboard preview are in `powerbi/`. The reporting model uses the order-level sales fact table; aggregate exports provide reconciliation totals.
 
-The intended story has three parts: overall net performance, category and regional contribution, and the effect of returns and discounts. The visual direction uses the same teal and coral palette as Project 02.
+The intended story has three parts: establish net performance, explain the gross-to-net revenue bridge, and prioritize return investigations by category. Regional, product and customer views provide supporting detail. The visual direction uses the same teal and coral palette as Project 02.
 
 Only the original dashboard screenshot is available. No editable `.pbix` or `.pbip` is included, so the interactive V2 has not been built or validated in Power BI.
 
@@ -156,10 +175,6 @@ Only the original dashboard screenshot is available. No editable `.pbix` or `.pb
 Original dashboard, showing **revenue before returns**, not the new estimated net revenue metric:
 
 ![Original sales performance dashboard](powerbi/dashboard_screenshot.png)
-
-## Remaining work
-
-- Build and validate the interactive Power BI V2 using the model guide, then replace the legacy screenshot.
 
 ## Portfolio alignment
 
